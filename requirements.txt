@@ -1,0 +1,13 @@
+aniso8601==9.0.1
+certifi==2021.10.8
+click==8.0.3
+Flask @ file:///tmp/build/80754af9/flask_1634118196080/work
+Flask-JWT==0.3.2
+Flask-RESTful==0.3.9
+itsdangerous @ file:///tmp/build/80754af9/itsdangerous_1621432558163/work
+Jinja2 @ file:///tmp/build/80754af9/jinja2_1635780242639/work
+MarkupSafe @ file:///opt/concourse/worker/volumes/live/1bcf0940-5bf8-4171-61e3-2133f5885e8b/volume/markupsafe_1621528148241/work
+PyJWT==1.4.2
+pytz==2021.3
+six==1.16.0
+Werkzeug @ file:///tmp/build/80754af9/werkzeug_1635505089296/work
