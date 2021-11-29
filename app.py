@@ -18,7 +18,7 @@ class Item(Resource):
     @jwt_required()
     def get(self, name):
         """Get an item."""
-        item = next((filter(lambda x: x["name"] == name, items)), None)
+        item = next(filter(lambda x: x["name"] == name, items), None)
         return {"item": item}, 200 if item else 404
 
     def post(self, name):
@@ -31,6 +31,19 @@ class Item(Resource):
         items.append(item)
 
         return item, 201
+
+    def update(self, name):
+        """Edit an existing item"""
+        data = request.get_json()
+
+    def delete(self, name):
+        """Delete multiple item."""
+        global items
+        items = list(filter(lambda i: i["name"] != name, items))
+        # Below, my way of deleting an item and it worked.
+        # item = next(filter(lambda i: i["name"] == name, items), None)
+        # items.remove(item)
+        return {"message:": "Item was deleted successfully."}
 
 
 class ItemList(Resource):

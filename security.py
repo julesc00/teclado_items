@@ -3,7 +3,8 @@ from user import User
 
 
 users = [
-    User(1, "julito", "pass123")
+    User(1, "julito", "pass123"),
+    User(2, "charbelito", "aaa")
 ]
 
 username_mapping = {u.username: u for u in users}
