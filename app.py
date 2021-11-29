@@ -32,9 +32,16 @@ class Item(Resource):
 
         return item, 201
 
-    def update(self, name):
+    def put(self, name):
         """Edit an existing item"""
         data = request.get_json()
+        item = next(filter(lambda x: x["name"] == name, items), None)
+        if item is None:
+            item = {"name": name, "price": data["price"]}
+            items.append(item)
+        else:
+            item.update(data)
+        return item
 
     def delete(self, name):
         """Delete multiple item."""
