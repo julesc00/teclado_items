@@ -47,16 +47,14 @@ class Item(Resource):
 
     @classmethod
     def update(cls, item):
-        connection = sqlite3.connect("data")
+        connection = sqlite3.connect("data.db")
         cursor = connection.cursor()
 
-        try:
-            query = "UPDATE items SET prices=? WHERE name=?"
-            cursor.execute(query, (item["price"], item["item"]))
-            connection.commit()
-            connection.close()
-        except ConnectionError:
-            return {"message": ERROR_MSG}, 500
+        query = "UPDATE items SET price=? WHERE name=?"
+        cursor.execute(query, (item["price"], item["name"]))
+
+        connection.commit()
+        connection.close()
 
     @jwt_required()
     def get(self, name):
@@ -88,9 +86,15 @@ class Item(Resource):
         updated_item = {"name": name, "price": data["price"]}
 
         if item is None:
-            self.insert(updated_item)
+            try:
+                self.insert(updated_item)
+            except ConnectionError:
+                return {"message": ERROR_MSG}, 500
         else:
-            self.update(updated_item)
+            try:
+                self.update(updated_item)
+            except ConnectionError:
+                return {"message": ERROR_MSG}, 500
 
         return updated_item
 
