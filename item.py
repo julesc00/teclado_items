@@ -2,8 +2,6 @@ import sqlite3
 from flask_restful import Resource, reqparse
 from flask_jwt import jwt_required
 
-items = []
-
 ERROR_MSG = "An database error occurred!"
 
 
@@ -118,14 +116,16 @@ class ItemList(Resource):
         """Return all items."""
         connection = sqlite3.connect("data.db")
         cursor = connection.cursor()
+        items = []
 
-        query = "SELECT * FROM items"
-        result = cursor.execute(query)
-        rows = result.fetchall()
-        connection.close()
+        try:
+            query = "SELECT * FROM items"
+            result = cursor.execute(query)
 
-        for name, row in rows:
-            if rows:
-                return {"items": {"item": {"name": name, "price": row}}}, 200
+            for row in result:
+                items.append({"item": {"name": row[0], "price": row[1]}}), 200
+            connection.close()
 
-            return {"message": "There are no entries."}
+            return {"items": items}
+        except ConnectionError:
+            return {"message": ERROR_MSG}, 500
