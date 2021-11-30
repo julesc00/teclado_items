@@ -4,6 +4,8 @@ from flask_jwt import jwt_required
 
 items = []
 
+ERROR_MSG = "An database error occurred!"
+
 
 # a model, urls
 class Item(Resource):
@@ -15,6 +17,47 @@ class Item(Resource):
         help="This field cannot be left blank!"
     )
 
+    @classmethod
+    def find_by_name(cls, name):
+        connection = sqlite3.connect("data.db")
+        cursor = connection.cursor()
+        try:
+            query = "SELECT * FROM items WHERE name=?"
+            result = cursor.execute(query, (name,))
+            row = result.fetchone()
+            connection.close()
+
+            if row:
+                return {"item": {"name": row[0], "price": row[1]}}, 200
+        except ConnectionError:
+            return {"message": ERROR_MSG}, 500
+
+    @classmethod
+    def insert(cls, item):
+        connection = sqlite3.connect("data.db")
+        cursor = connection.cursor()
+
+        try:
+            query = "INSERT INTO items VALUES (?, ?)"
+            cursor.execute(query, (item["name"], item["price"]))
+            connection.commit()
+            connection.close()
+        except ConnectionError:
+            return {"message": ERROR_MSG}, 500
+
+    @classmethod
+    def update(cls, item):
+        connection = sqlite3.connect("data")
+        cursor = connection.cursor()
+
+        try:
+            query = "UPDATE items SET prices=? WHERE name=?"
+            cursor.execute(query, (item["price"], item["item"]))
+            connection.commit()
+            connection.close()
+        except ConnectionError:
+            return {"message": ERROR_MSG}, 500
+
     @jwt_required()
     def get(self, name):
         """Get an item from db."""
@@ -22,19 +65,6 @@ class Item(Resource):
         if item:
             return item
         return {"message": "Item not found."}, 404
-
-    @classmethod
-    def find_by_name(cls, name):
-        connection = sqlite3.connect("data.db")
-        cursor = connection.cursor()
-
-        query = "SELECT * FROM items WHERE name=?"
-        result = cursor.execute(query, (name,))
-        row = result.fetchone()
-        connection.close()
-
-        if row:
-            return {"item": {"name": row[0], "price": row[1]}}, 200
 
     def post(self, name):
         """Create a new item."""
@@ -44,42 +74,39 @@ class Item(Resource):
         data = Item.parser.parse_args()
         item = {"name": name, "price": data["price"]}
 
-        connection = sqlite3.connect("data.db")
-        cursor = connection.cursor()
-
-        query = "INSERT INTO items VALUES (?, ?)"
-        cursor.execute(query, (item["name"], item["price"]))
-
-        connection.commit()
-        connection.close()
+        try:
+            self.insert(item)
+        except NotImplemented:
+            return {"message": ERROR_MSG}, 500
 
         return item, 201
 
     def put(self, name):
         """Edit an existing item"""
-        item = self.find_by_name(name)
         data = Item.parser.parse_args()
-        if item is None:
-            item = {"name": name, "price": data["price"]}
-            items.append(item)
-        else:
-            item.update(data)
+        item = self.find_by_name(name)
+        updated_item = {"name": name, "price": data["price"]}
 
-        return item
+        if item is None:
+            self.insert(updated_item)
+        else:
+            self.update(updated_item)
+
+        return updated_item
 
     def delete(self, name):
         """Delete multiple item."""
-
         connection = sqlite3.connect("data.db")
         cursor = connection.cursor()
 
-        query = "DELETE FROM items WHERE name=?"
-        cursor.execute(query, (name,))
-
-        connection.commit()
-        connection.close()
-
-        return {"message:": "Item was deleted successfully."}
+        try:
+            query = "DELETE FROM items WHERE name=?"
+            cursor.execute(query, (name,))
+            connection.commit()
+            connection.close()
+            return {"message:": "Item was deleted successfully."}
+        except ConnectionError:
+            return {"message": ERROR_MSG}, 500
 
 
 class ItemList(Resource):
